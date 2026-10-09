@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Discovery Platform — Live Demo</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
+  body { background:#0f172a; color:#e2e8f0; }
+  header { background:linear-gradient(135deg,#4f46e5,#7c3aed); padding:28px 20px; text-align:center; }
+  header h1 { font-size:26px; margin-bottom:6px; }
+  header p { opacity:.85; font-size:14px; }
+  .badge { display:inline-block; background:#22c55e; color:#04140a; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; margin-top:10px; }
+  .filters { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding:16px; }
+  .filters button { border:1px solid #334155; background:#1e293b; color:#e2e8f0; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; }
+  .filters button.active { background:#4f46e5; border-color:#4f46e5; }
+  .wrap { display:flex; flex-wrap:wrap; gap:16px; padding:0 16px 30px; max-width:1200px; margin:0 auto; }
+  #map { flex:1 1 480px; height:480px; border-radius:12px; z-index:1; }
+  .list { flex:1 1 320px; display:flex; flex-direction:column; gap:12px; max-height:480px; overflow-y:auto; }
+  .card { background:#1e293b; border-radius:12px; padding:16px; border-left:4px solid #4f46e5; cursor:pointer; transition:transform .15s; }
+  .card:hover { transform:translateY(-2px); }
+  .card h3 { font-size:16px; margin-bottom:6px; }
+  .card .meta { font-size:13px; color:#94a3b8; margin-bottom:8px; }
+  .card .price { font-weight:700; color:#22c55e; }
+  .card .free { font-weight:700; color:#22c55e; }
+  .featured-tag { background:#f59e0b; color:#1c1005; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:8px; }
+  footer { text-align:center; padding:20px; color:#64748b; font-size:12px; }
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+  .modal.open { display:flex; }
+  .modal-box { background:#1e293b; border-radius:16px; padding:28px; max-width:480px; width:100%; }
+  .modal-box h2 { margin-bottom:10px; }
+  .modal-box p { color:#94a3b8; font-size:14px; margin-bottom:8px; line-height:1.6; }
+  .modal-box .close { margin-top:16px; background:#4f46e5; border:none; color:#fff; padding:10px 24px; border-radius:8px; cursor:pointer; font-size:14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎪 Event Discovery Platform</h1>
+  <p>Find events around you — map, filters, RSVP. CS619 Final Year Project</p>
+  <span class="badge">● LIVE PROTOTYPE DEMO</span>
+</header>
+<div class="filters" id="filters"></div>
+<div class="wrap">
+  <div id="map"></div>
+  <div class="list" id="list"></div>
+</div>
+<div class="modal" id="modal"><div class="modal-box" id="modalBox"></div></div>
+<footer>Backend: Strapi v5 CMS &nbsp;•&nbsp; Data served from live API &nbsp;•&nbsp; Built by Azmat Hayat</footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const CATS = [
+  {slug:'all', name:'All', color:'#4f46e5'},
+  {slug:'music', name:'Music', color:'#e11d48'},
+  {slug:'sports', name:'Sports', color:'#16a34a'},
+  {slug:'technology', name:'Technology', color:'#2563eb'},
+  {slug:'art-culture', name:'Art & Culture', color:'#9333ea'},
+  {slug:'food-drink', name:'Food & Drink', color:'#ea580c'},
+  {slug:'community-service', name:'Community Service', color:'#0d9488'},
+];
+const EVENTS = [
+  {title:'Peshawar Music Night', cat:'music', venue:'Peshawar Services Club', lat:34.008, lng:71.578,
+   desc:'Live Pashto and Urdu music concert under the stars.', price:500, free:false, featured:true, date:'15 Nov 2026, 6 PM'},
+  {title:'Tech Innovators Meetup', cat:'technology', venue:'Nishtar Hall', lat:34.012, lng:71.583,
+   desc:'Monthly meetup for developers and startups of Peshawar.', price:0, free:true, featured:true, date:'15 Nov 2026, 6 PM'},
+  {title:'City Marathon 2026', cat:'sports', venue:'Islamia College Ground', lat:34.002, lng:71.571,
+   desc:'Annual 10km city marathon — all ages welcome.', price:200, free:false, featured:false, date:'15 Nov 2026, 6 PM'},
+  {title:'Food Street Festival', cat:'food-drink', venue:'Peshawar Services Club', lat:34.008, lng:71.578,
+   desc:'Taste 50+ local dishes from Peshawar food street vendors.', price:100, free:false, featured:false, date:'15 Nov 2026, 6 PM'},
+];
+const catColor = s => (CATS.find(c=>c.slug===s)||{}).color || '#4f46e5';
+const catName = s => (CATS.find(c=>c.slug===s)||{}).name || s;
+
+const map = L.map('map').setView([34.008, 71.578], 14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+let markers = [];
+let activeCat = 'all';
+
+function renderFilters(){
+  document.getElementById('filters').innerHTML = CATS.map(c =>
+    `<button data-cat="${c.slug}" class="${c.slug===activeCat?'active':''}">${c.name}</button>`).join('');
+  document.querySelectorAll('#filters button').forEach(b=>b.onclick=()=>{activeCat=b.dataset.cat;render();});
+}
+function render(){
+  renderFilters();
+  markers.forEach(m=>map.removeLayer(m)); markers=[];
+  const list = document.getElementById('list'); list.innerHTML='';
+  EVENTS.filter(e=>activeCat==='all'||e.cat===activeCat).forEach(e=>{
+    const icon = L.divIcon({html:`<div style="background:${catColor(e.cat)};width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>`,iconSize:[26,26],iconAnchor:[13,13]});
+    const m = L.marker([e.lat,e.lng],{icon}).addTo(map).bindPopup(`<b>${e.title}</b><br>${e.venue}`);
+    m.on('click',()=>showModal(e)); markers.push(m);
+    const card = document.createElement('div'); card.className='card'; card.style.borderLeftColor=catColor(e.cat);
+    card.innerHTML = `<h3>${e.title}${e.featured?'<span class="featured-tag">FEATURED</span>':''}</h3>
+      <div class="meta">📍 ${e.venue} &nbsp;•&nbsp; 🗓 ${e.date} &nbsp;•&nbsp; ${catName(e.cat)}</div>
+      <div class="meta">${e.desc}</div>
+      <div class="${e.free?'free':'price'}">${e.free?'FREE ENTRY':'Rs '+e.price}</div>`;
+    card.onclick = ()=>{ map.flyTo([e.lat,e.lng],16); showModal(e); };
+    list.appendChild(card);
+  });
+}
+function showModal(e){
+  document.getElementById('modalBox').innerHTML = `<h2>${e.title}</h2>
+    <p>📍 <b>${e.venue}</b>, Peshawar</p><p>🗓 ${e.date}</p>
+    <p>🏷 ${catName(e.cat)}${e.featured?' &nbsp;⭐ Featured':''}</p>
+    <p>${e.desc}</p>
+    <p style="font-size:18px;font-weight:700;color:#22c55e">${e.free?'FREE ENTRY':'Ticket: Rs '+e.price}</p>
+    <p>Organizer: Hayat Events &nbsp;•&nbsp; 0300-0000000</p>
+    <button class="close" onclick="document.getElementById('modal').classList.remove('open')">Close</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+document.getElementById('modal').onclick = e=>{ if(e.target.id==='modal') e.target.classList.remove('open'); };
+render();
+</script>
+</body>
+</html>
