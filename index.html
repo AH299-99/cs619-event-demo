@@ -3,80 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Event Discovery Platform — Live Demo</title>
+<title>Event Discovery Platform — Live Demo (Lahore)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
+  /* ============ BASE ============ */
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
   body { background:#0f172a; color:#e2e8f0; }
   a { color:#818cf8; }
-  /* ---------- header ---------- */
+  button, .btn, .chip, .fcard .btn { min-height:44px; } /* touch-friendly (44px) */
+
+  /* ============ HEADER ============ */
   header { background:linear-gradient(135deg,#4f46e5,#7c3aed); padding:26px 20px 20px; text-align:center; }
   header h1 { font-size:26px; margin-bottom:6px; }
-  header p { opacity:.85; font-size:14px; }
-  .badge { display:inline-block; background:#22c55e; color:#04140a; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; margin-top:10px; }
-  /* ---------- search ---------- */
+  header p { opacity:.9; font-size:14px; }
+  .badge { display:inline-block; background:#22c55e; color:#04140a; font-size:12px; font-weight:700; padding:6px 14px; border-radius:20px; margin-top:10px; }
+
+  /* ============ SEARCH ============ */
   .searchbar { max-width:640px; margin:18px auto 0; padding:0 16px; position:relative; }
-  .searchbar input { width:100%; padding:12px 44px 12px 16px; border-radius:10px; border:1px solid #334155; background:#1e293b; color:#e2e8f0; font-size:15px; }
+  .searchbar input { width:100%; padding:12px 48px 12px 16px; border-radius:10px; border:1px solid #334155; background:#1e293b; color:#e2e8f0; font-size:15px; min-height:48px; }
   .searchbar input::placeholder { color:#64748b; }
-  .searchbar .clear { position:absolute; right:26px; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer; display:none; }
-  /* ---------- filters ---------- */
+  .searchbar .clear { position:absolute; right:22px; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; font-size:24px; cursor:pointer; display:none; min-height:44px; min-width:44px; }
+
+  /* ============ CATEGORY CHIPS ============ */
   .filters { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding:14px 16px 4px; }
-  .filters button { border:1px solid #334155; background:#1e293b; color:#e2e8f0; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; min-height:40px; }
-  .filters button.active { background:#4f46e5; border-color:#4f46e5; }
-  /* ---------- featured ---------- */
+  .chip { border:1px solid #334155; background:#1e293b; color:#e2e8f0; padding:8px 16px; border-radius:20px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px; }
+  .chip.active { background:#4f46e5; border-color:#4f46e5; }
+  .chip .dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+
+  /* ============ SECTIONS ============ */
   .section-title { max-width:1200px; margin:22px auto 12px; padding:0 16px; font-size:20px; }
+  .result-count { max-width:1200px; margin:0 auto; padding:0 16px; font-size:14px; color:#94a3b8; }
+
+  /* ============ FEATURED CARDS ============ */
   .featured { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; max-width:1200px; margin:0 auto; padding:0 16px; }
-  .fcard { background:#1e293b; border-radius:12px; overflow:hidden; border:1px solid #334155; }
+  .fcard { background:#1e293b; border-radius:12px; overflow:hidden; border:1px solid #334155; cursor:pointer; transition:transform .15s; }
+  .fcard:hover { transform:translateY(-3px); }
   .fcard img { width:100%; height:150px; object-fit:cover; display:block; }
   .fcard .body { padding:14px; }
   .fcard h3 { font-size:16px; margin-bottom:6px; }
   .fcard .meta { font-size:13px; color:#94a3b8; margin-bottom:8px; }
   .fcard .desc { font-size:13px; color:#cbd5e1; margin-bottom:10px; line-height:1.5; }
-  .catpill { display:inline-block; font-size:11px; font-weight:700; padding:2px 10px; border-radius:10px; color:#fff; margin-bottom:8px; }
-  .btn { display:inline-block; background:#4f46e5; color:#fff; text-decoration:none; padding:10px 18px; border-radius:8px; font-size:14px; border:none; cursor:pointer; min-height:44px; }
+  .catpill { display:inline-block; font-size:11px; font-weight:700; padding:4px 10px; border-radius:10px; color:#fff; margin-bottom:8px; }
+  .btn { display:inline-block; background:#4f46e5; color:#fff !important; text-decoration:none; padding:10px 18px; border-radius:8px; font-size:14px; border:none; cursor:pointer; text-align:center; }
   .btn:hover { background:#4338ca; }
-  /* ---------- map + list ---------- */
+  .btn.secondary { background:#334155; }
+
+  /* ============ MAP + LEGEND ============ */
   .mobile-tabs { display:none; justify-content:center; gap:8px; padding:12px 16px 0; }
-  .mobile-tabs button { flex:1; max-width:200px; padding:12px; border-radius:10px; border:1px solid #334155; background:#1e293b; color:#e2e8f0; font-size:14px; cursor:pointer; min-height:48px; }
+  .mobile-tabs button { flex:1; max-width:200px; padding:12px; border-radius:10px; border:1px solid #334155; background:#1e293b; color:#e2e8f0; font-size:14px; cursor:pointer; }
   .mobile-tabs button.active { background:#4f46e5; border-color:#4f46e5; }
-  .wrap { display:flex; flex-wrap:wrap; gap:16px; padding:16px; max-width:1200px; margin:0 auto 30px; }
-  #map { flex:1 1 480px; height:480px; border-radius:12px; z-index:1; min-width:300px; }
-  .list { flex:1 1 320px; display:flex; flex-direction:column; gap:12px; max-height:480px; overflow-y:auto; min-width:300px; }
+  .wrap { display:flex; flex-wrap:wrap; gap:16px; padding:16px; max-width:1200px; margin:0 auto; }
+  .map-col { flex:1 1 480px; min-width:300px; }
+  #map { height:480px; border-radius:12px; z-index:1; }
+  .legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; font-size:12px; color:#cbd5e1; }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .legend .dot { width:12px; height:12px; border-radius:50%; display:inline-block; }
+
+  /* ============ EVENT LIST ============ */
+  .list-col { flex:1 1 340px; min-width:300px; display:flex; flex-direction:column; }
+  .list { display:flex; flex-direction:column; gap:12px; max-height:480px; overflow-y:auto; padding-right:4px; }
   .card { background:#1e293b; border-radius:12px; padding:14px; border-left:4px solid #4f46e5; cursor:pointer; transition:transform .15s; display:flex; gap:12px; }
-  .card:hover, .card.hovered { transform:translateY(-2px); background:#243049; }
+  .card:hover { transform:translateY(-2px); background:#243049; }
   .card img.thumb { width:88px; height:88px; object-fit:cover; border-radius:8px; flex-shrink:0; }
-  .card .info { flex:1; }
+  .card .info { flex:1; min-width:0; }
   .card h3 { font-size:15px; margin-bottom:4px; }
   .card .meta { font-size:12px; color:#94a3b8; margin-bottom:4px; }
   .card .desc { font-size:12px; color:#cbd5e1; margin-bottom:6px; }
   .price { font-weight:700; color:#22c55e; font-size:14px; }
-  .noresults { text-align:center; padding:40px 20px; color:#94a3b8; }
-  /* ---------- detail page ---------- */
+
+  /* ============ PAGINATION ============ */
+  .pagination { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:14px; }
+  .pagination button { background:#1e293b; border:1px solid #334155; color:#e2e8f0; border-radius:8px; padding:10px 20px; cursor:pointer; font-size:14px; }
+  .pagination button:disabled { opacity:.4; cursor:default; }
+  .pagination .pageinfo { font-size:13px; color:#94a3b8; }
+
+  /* ============ STATES ============ */
+  .noresults { text-align:center; padding:40px 20px; color:#94a3b8; background:#1e293b; border-radius:12px; }
+  .noresults h3 { color:#e2e8f0; margin-bottom:8px; }
+  .noresults p { margin-bottom:14px; font-size:14px; }
+  #loading { text-align:center; padding:60px 20px; color:#94a3b8; font-size:16px; }
+  .spinner { display:inline-block; width:28px; height:28px; border:3px solid #334155; border-top-color:#4f46e5; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; margin-right:10px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* ============ DETAIL VIEW ============ */
   #detailView { display:none; max-width:900px; margin:0 auto; padding:20px 16px 40px; }
   .breadcrumb { font-size:14px; color:#94a3b8; margin-bottom:18px; }
   .breadcrumb a { color:#818cf8; text-decoration:none; }
-  .gallery { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
-  .gallery img { width:100%; height:220px; object-fit:cover; border-radius:12px; }
+  .carousel { position:relative; margin-bottom:20px; }
+  .carousel img.main { width:100%; height:340px; object-fit:cover; border-radius:12px; display:block; }
+  .carousel .nav { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.55); color:#fff; border:none; font-size:22px; width:48px; height:48px; border-radius:50%; cursor:pointer; }
+  .carousel .prev { left:12px; } .carousel .next { right:12px; }
+  .carousel .counter { position:absolute; bottom:12px; right:12px; background:rgba(0,0,0,.6); color:#fff; font-size:12px; padding:4px 12px; border-radius:12px; }
   .detail-box { background:#1e293b; border-radius:12px; padding:24px; margin-bottom:16px; }
   .detail-box h2 { font-size:24px; margin-bottom:12px; }
-  .detail-box .row { font-size:14px; color:#cbd5e1; margin-bottom:10px; line-height:1.6; }
+  .detail-box .row { font-size:14px; color:#cbd5e1; margin-bottom:10px; line-height:1.7; }
   .detail-box .row b { color:#e2e8f0; }
   #minimap { height:300px; border-radius:12px; z-index:1; margin-top:12px; }
-  footer { text-align:center; padding:20px; color:#64748b; font-size:12px; }
+  .rsvp-ok { background:#14532d; border:1px solid #22c55e; color:#bbf7d0; padding:14px; border-radius:10px; margin-top:12px; font-size:14px; }
+
+  footer { text-align:center; padding:22px 16px; color:#cbd5e1; font-size:13px; line-height:1.6; }
+
+  /* ============ RESPONSIVE ============ */
   @media (max-width:768px) {
     .mobile-tabs { display:flex; }
-    #map { display:none; height:420px; flex:1 1 100%; }
-    #map.show-mobile { display:block; }
-    .list { display:none; max-height:none; flex:1 1 100%; }
-    .list.show-mobile { display:flex; }
-    .gallery { grid-template-columns:1fr; }
-    .gallery img { height:200px; }
+    .map-col { display:none; flex:1 1 100%; }
+    .map-col.show-mobile { display:block; }
+    #map { height:60vh; } /* max 60vh on mobile */
+    .list-col { display:none; flex:1 1 100%; }
+    .list-col.show-mobile { display:flex; }
+    .list { max-height:none; }
+    .carousel img.main { height:240px; }
   }
 </style>
 </head>
 <body>
 
-<!-- ============ HOME VIEW ============ -->
+<!-- ================= HOME VIEW ================= -->
 <div id="homeView">
   <header>
     <h1>🎪 Event Discovery Platform</h1>
@@ -84,35 +126,54 @@
     <span class="badge">● LIVE PROTOTYPE DEMO — LAHORE, PAKISTAN</span>
   </header>
 
+  <!-- Search (FR-08) -->
   <div class="searchbar">
     <input type="text" id="searchInput" placeholder="🔍 Search events by name, category, organizer or venue…" aria-label="Search events">
     <button class="clear" id="clearSearch" aria-label="Clear search">×</button>
   </div>
 
+  <!-- Category chips (FR-03) -->
   <div class="filters" id="filters"></div>
 
-  <h2 class="section-title">⭐ Featured Events</h2>
-  <div class="featured" id="featured"></div>
+  <!-- Loading / empty states never leave a blank section -->
+  <div id="loading"><span class="spinner"></span>Loading events…</div>
 
-  <h2 class="section-title">🗺 Explore Events</h2>
-  <div class="mobile-tabs">
-    <button id="tabMap" class="active">🗺 Map</button>
-    <button id="tabList">📋 List</button>
-  </div>
-  <div class="wrap">
-    <div id="map" class="show-mobile"></div>
-    <div class="list" id="list"></div>
+  <div id="content" style="display:none">
+    <!-- Featured events (FR-07) -->
+    <h2 class="section-title">⭐ Featured Events</h2>
+    <div class="featured" id="featured"></div>
+
+    <!-- Map + list (FR-01, FR-02) -->
+    <h2 class="section-title">🗺 Explore Events</h2>
+    <div class="result-count" id="resultCount"></div>
+    <div class="mobile-tabs">
+      <button id="tabMap" class="active">🗺 Map</button>
+      <button id="tabList">📋 List</button>
+    </div>
+    <div class="wrap">
+      <div class="map-col show-mobile" id="mapCol">
+        <div id="map"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="list-col" id="listCol">
+        <div class="list" id="list"></div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ============ DETAIL VIEW ============ -->
+<!-- ================= DETAIL VIEW (FR-04) ================= -->
 <div id="detailView"></div>
 
-<footer>Backend: Strapi v5 CMS &nbsp;•&nbsp; Frontend: Next.js + Leaflet.js &nbsp;•&nbsp; Built by Azmat Hayat</footer>
+<footer>Static prototype with sample data — final system: Strapi v5 + Next.js + Leaflet.js. Built by Azmat Hayat.</footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-/* ================= DATA (from Strapi backend seed) ================= */
+/* =====================================================================
+   SAMPLE DATA — 12 events across all 7 categories, real Lahore venues
+   (In the final system this comes from the Strapi v5 API.)
+===================================================================== */
 const CATS = [
   {slug:'music', name:'Music', color:'#e11d48'},
   {slug:'sports', name:'Sports', color:'#16a34a'},
@@ -122,248 +183,401 @@ const CATS = [
   {slug:'health-wellness', name:'Health & Wellness', color:'#0891b2'},
   {slug:'community-service', name:'Community Service', color:'#0d9488'},
 ];
-const IMG = id => `https://images.unsplash.com/${id}?w=800&q=60`;
+const U = id => `https://images.unsplash.com/${id}?w=800&q=60`; // image helper
 const EVENTS = [
-  {
-    slug:'lahore-music-night', title:'Lahore Music Night', cat:'music',
-    venue:{name:'Alhamra Arts Council', address:'68 Mall Road, Lahore, Punjab, Pakistan', lat:31.5656, lng:74.3242},
-    date:'Sat, 15 Nov 2026', time:'7:00 PM – 11:00 PM', price:500, free:false, featured:true,
-    organizer:{name:'Hayat Events', phone:'0300-1234567', email:'info@hayatevents.pk'},
-    shortDesc:'Live concert with top singers under the open sky.',
+  { id:1, name:'Lahore Music Night', category:'music', date:'Sat, 15 Nov 2026', startTime:'7:00 PM', endTime:'11:00 PM',
+    shortDesc:'Live concert with top singers under the open sky at Alhamra.',
     fullDesc:'Lahore Music Night brings the city\'s best vocalists and bands to the iconic Alhamra Arts Council for an unforgettable evening. Enjoy live performances ranging from classical and folk to modern pop, with food stalls and a vibrant crowd. Gates open at 6:00 PM — bring your friends and family!',
-    images:[IMG('photo-1470229722913-7c0e2dbbafd3'), IMG('photo-1501281668745-f7f57925c3b4')],
-  },
-  {
-    slug:'tech-innovators-meetup', title:'Tech Innovators Meetup', cat:'technology',
-    venue:{name:'Expo Centre Lahore', address:'Abdul Haque Road, Johar Town, Lahore, Punjab, Pakistan', lat:31.4697, lng:74.2728},
-    date:'Sun, 16 Nov 2026', time:'10:00 AM – 4:00 PM', price:0, free:true, featured:true,
-    organizer:{name:'Lahore Tech Community', phone:'0300-2345678', email:'hello@lhrtech.pk'},
-    shortDesc:'Monthly meetup for developers and startups of Lahore.',
-    fullDesc:'The Tech Innovators Meetup is Lahore\'s monthly gathering of developers, designers, founders and students. This edition features talks on AI tools, freelancing, and web development, plus networking sessions and a startup showcase. Whether you are a beginner or a pro, come learn, connect and grow. Entry is completely free — just bring your curiosity!',
-    images:[IMG('photo-1540575467063-178a50c2df87'), IMG('photo-1515187029135-18ee286d815b')],
-  },
-  {
-    slug:'lahore-marathon-2026', title:'Lahore Marathon 2026', cat:'sports',
-    venue:{name:'Gaddafi Stadium', address:'Hafeez Kardar Road, Gulberg III, Lahore, Punjab, Pakistan', lat:31.5139, lng:74.3333},
-    date:'Sun, 23 Nov 2026', time:'6:00 AM – 11:00 AM', price:200, free:false, featured:false,
-    organizer:{name:'Lahore Running Club', phone:'0300-3456789', email:'run@lhrrun.pk'},
+    images:[U('photo-1470229722913-7c0e2dbbafd3'), U('photo-1514525253161-7a46d19cd819'), U('photo-1493225457124-a3eb161ffa5f')],
+    venue:'Alhamra Arts Council', address:'68 Mall Road, Lahore, Punjab, Pakistan', lat:31.5656, lng:74.3242,
+    price:500, organizer:'Hayat Events', contact:'0300-1234567 · info@hayatevents.pk', featured:true },
+  { id:2, name:'Sufi Qawwali Night', category:'music', date:'Fri, 21 Nov 2026', startTime:'8:00 PM', endTime:'11:30 PM',
+    shortDesc:'Soulful qawwali evening with a view of Badshahi Mosque.',
+    fullDesc:'An enchanting night of Sufi qawwali at the historic Haveli Restaurant on Fort Road. Renowned qawwals perform classics of Nusrat Fateh Ali Khan and the Sabri Brothers as you dine with the illuminated Badshahi Mosque in the background. Dinner is included in the ticket.',
+    images:[U('photo-1429962714451-bb934ecdc4ec'), U('photo-1501281668745-f7f57925c3b4')],
+    venue:'The Haveli Restaurant', address:'23 Fort Road, Near Badshahi Mosque, Lahore, Punjab, Pakistan', lat:31.5862, lng:74.3088,
+    price:800, organizer:'Haveli Events', contact:'0300-7654321 · events@haveli.pk', featured:false },
+  { id:3, name:'Lahore Marathon 2026', category:'sports', date:'Sun, 23 Nov 2026', startTime:'6:00 AM', endTime:'11:00 AM',
     shortDesc:'Annual 10km city marathon — all ages welcome.',
-    fullDesc:'The Lahore Marathon 2026 is back! Run through the heart of the city starting at the historic Gaddafi Stadium. Choose from the full 10km race, a 5km fun run, or the 1km family walk. All finishers receive a medal, t-shirt and refreshments. Professional timing, medical support and water stations are provided along the route.',
-    images:[IMG('photo-1461896836934-ffe607ba8211'), IMG('photo-1552674605-db6ffd4facb5')],
-  },
-  {
-    slug:'lahore-food-festival', title:'Lahore Food Festival', cat:'food-drink',
-    venue:{name:'Fort Road Food Street', address:'Fort Road, Near Badshahi Mosque, Lahore, Punjab, Pakistan', lat:31.5855, lng:74.3095},
-    date:'Fri – Sun, 28–30 Nov 2026', time:'12:00 PM – 11:00 PM', price:100, free:false, featured:false,
-    organizer:{name:'Foodies of Lahore', phone:'0300-4567890', email:'taste@foodiesoflahore.pk'},
+    fullDesc:'The Lahore Marathon 2026 is back! Run through the heart of the city starting at the historic Gaddafi Stadium. Choose from the full 10km race, a 5km fun run, or the 1km family walk. All finishers receive a medal, t-shirt and refreshments. Professional timing, medical support and water stations provided.',
+    images:[U('photo-1461896836934-ffe607ba8211'), U('photo-1552674605-db6ffd4facb5')],
+    venue:'Gaddafi Stadium', address:'Hafeez Kardar Road, Gulberg III, Lahore, Punjab, Pakistan', lat:31.5139, lng:74.3333,
+    price:200, organizer:'Lahore Running Club', contact:'0300-3456789 · run@lhrrun.pk', featured:false },
+  { id:4, name:'Lahore Cycling Race', category:'sports', date:'Sun, 30 Nov 2026', startTime:'7:00 AM', endTime:'12:00 PM',
+    shortDesc:'25km cycling race through Gulberg and DHA.',
+    fullDesc:'Pedal through Lahore\'s greenest routes in this 25km cycling race starting at Liberty Chowk. Categories for professionals, amateurs and juniors (under 16). Helmets are mandatory — bring your own cycle or rent one at the venue. Prize money for the top 3 finishers in each category.',
+    images:[U('photo-1541625602330-2277a4c46182'), U('photo-1485965120184-e220f721d03e')],
+    venue:'Liberty Chowk', address:'Main Boulevard, Gulberg, Lahore, Punjab, Pakistan', lat:31.5098, lng:74.3512,
+    price:300, organizer:'Lahore Cyclists', contact:'0300-9876543 · ride@lahorecyclists.pk', featured:false },
+  { id:5, name:'Tech Innovators Meetup', category:'technology', date:'Sun, 16 Nov 2026', startTime:'10:00 AM', endTime:'4:00 PM',
+    shortDesc:'Monthly meetup for developers and startups of Lahore.',
+    fullDesc:'The Tech Innovators Meetup is Lahore\'s monthly gathering of developers, designers, founders and students. This edition features talks on AI tools, freelancing, and web development, plus networking sessions and a startup showcase. Whether you are a beginner or a pro, come learn, connect and grow. Entry is completely free!',
+    images:[U('photo-1540575467063-178a50c2df87'), U('photo-1515187029135-18ee286d815b')],
+    venue:'Expo Centre Lahore', address:'Abdul Haque Road, Johar Town, Lahore, Punjab, Pakistan', lat:31.4697, lng:74.2728,
+    price:0, organizer:'Lahore Tech Community', contact:'0300-2345678 · hello@lhrtech.pk', featured:true },
+  { id:6, name:'Lahore Tech Summit 2026', category:'technology', date:'Sat, 29 Nov 2026', startTime:'9:00 AM', endTime:'6:00 PM',
+    shortDesc:'Full-day summit: AI, startups, and the future of tech.',
+    fullDesc:'Lahore Tech Summit 2026 gathers 500+ founders, engineers and investors at LUMS for a full day of keynotes, panel discussions and hands-on workshops. Topics include artificial intelligence, fintech, and Pakistan\'s startup ecosystem. Lunch and networking dinner included. Early-bird tickets available until 15 Nov.',
+    images:[U('photo-1550751827-4bd374c3f58b'), U('photo-1531482615713-2afd69097998')],
+    venue:'LUMS', address:'DHA Phase 5, Khayaban-e-Jinnah, Lahore, Punjab, Pakistan', lat:31.4697, lng:74.4100,
+    price:1500, organizer:'TechSummit PK', contact:'0300-1122334 · info@techsummit.pk', featured:false },
+  { id:7, name:'Mughal Art Exhibition', category:'art-culture', date:'17 – 30 Nov 2026', startTime:'10:00 AM', endTime:'8:00 PM',
+    shortDesc:'Rare Mughal-era paintings and artifacts on display.',
+    fullDesc:'A two-week exhibition of rare Mughal-era miniature paintings, manuscripts and artifacts at the Lahore Museum — many displayed to the public for the first time. Guided tours in Urdu and English run every two hours. A must-visit for history lovers, students and art collectors.',
+    images:[U('photo-1554907984-15263bfd63bd'), U('photo-1515405295579-ba7b45403062')],
+    venue:'Lahore Museum', address:'Mall Road, Anarkali, Lahore, Punjab, Pakistan', lat:31.5681, lng:74.3299,
+    price:250, organizer:'Lahore Museum Society', contact:'042-99204143 · visit@lahoremuseum.pk', featured:true },
+  { id:8, name:'Shalimar Light & Sound Show', category:'art-culture', date:'Fri, 28 Nov 2026', startTime:'7:30 PM', endTime:'10:00 PM',
+    shortDesc:'The gardens come alive with lights, music and history.',
+    fullDesc:'Experience the UNESCO-listed Shalimar Gardens like never before — a spectacular light and sound show narrating 400 years of Mughal history across the illuminated terraces, fountains and pavilions. Shows run in Urdu (7:30 PM) and English (9:00 PM). Limited seats per show, booking recommended.',
+    images:[U('photo-1519671482749-fd09be7ccebf'), U('photo-1492684223066-81342ee5ff30')],
+    venue:'Shalimar Gardens', address:'G.T. Road, Shalimar Town, Lahore, Punjab, Pakistan', lat:31.5857, lng:74.3818,
+    price:400, organizer:'Walled City Authority', contact:'0300-5566778 · shows@walledcity.pk', featured:false },
+  { id:9, name:'Lahore Food Festival', category:'food-drink', date:'28 – 30 Nov 2026', startTime:'12:00 PM', endTime:'11:00 PM',
     shortDesc:'Taste 50+ local dishes with a view of Badshahi Mosque.',
     fullDesc:'Three days of pure Lahori flavour at the famous Fort Road Food Street! Over 50 stalls serving chargha, taka-tak, falooda, BBQ and traditional desserts — all with the stunning Badshahi Mosque as your backdrop. Live cooking demos, a food-eating contest, and kids\' activities make this perfect for the whole family.',
-    images:[IMG('photo-1504674900247-0877df9cc836'), IMG('photo-1414235077428-338989a2e8c0')],
-  },
+    images:[U('photo-1504674900247-0877df9cc836'), U('photo-1414235077428-338989a2e8c0')],
+    venue:'Fort Road Food Street', address:'Fort Road, Near Badshahi Mosque, Lahore, Punjab, Pakistan', lat:31.5855, lng:74.3095,
+    price:100, organizer:'Foodies of Lahore', contact:'0300-4567890 · taste@foodiesoflahore.pk', featured:true },
+  { id:10, name:'Lahore Mango Festival', category:'food-drink', date:'Sat, 22 Nov 2026', startTime:'11:00 AM', endTime:'8:00 PM',
+    shortDesc:'50+ mango varieties, tasting contests and family fun.',
+    fullDesc:'Celebrate the king of fruits at Jilani Park! Taste 50+ mango varieties from across Punjab and Sindh — Anwar Ratol, Chaunsa, Langra, Dussehri and more. Mango-eating contests, fresh juices, desserts, and a farmers\' market. Kids under 5 enter free.',
+    images:[U('photo-1553279768-865429fa0078'), U('photo-1504674900247-0877df9cc836')],
+    venue:'Jilani Park (Race Course Park)', address:'Jail Road, Lahore, Punjab, Pakistan', lat:31.5450, lng:74.3430,
+    price:150, organizer:'Agri Events Punjab', contact:'0300-6677889 · mango@agrievents.pk', featured:false },
+  { id:11, name:'Sunrise Yoga in the Park', category:'health-wellness', date:'Sun, 18 Nov 2026', startTime:'6:00 AM', endTime:'7:30 AM',
+    shortDesc:'Free open-air yoga session for all fitness levels.',
+    fullDesc:'Start your Sunday with peace and energy! Certified instructors lead a 90-minute open-air yoga session at Model Town Park — suitable for complete beginners and experienced practitioners alike. Bring your own mat (limited mats available on first-come basis). Free drinking water provided.',
+    images:[U('photo-1544367567-0f2fcb009e0b'), U('photo-1506126613408-eca07ce68773')],
+    venue:'Model Town Park', address:'Model Town Link Road, Model Town, Lahore, Punjab, Pakistan', lat:31.4800, lng:74.3230,
+    price:0, organizer:'Lahore Wellness Group', contact:'0300-7788990 · namaste@lhrwellness.pk', featured:false },
+  { id:12, name:'Lahore Clean-Up Drive', category:'community-service', date:'Sat, 21 Nov 2026', startTime:'8:00 AM', endTime:'12:00 PM',
+    shortDesc:'Volunteer to clean Greater Iqbal Park. Gloves provided!',
+    fullDesc:'Join 200+ volunteers for a community clean-up of Greater Iqbal Park! Gloves, bags and refreshments are provided — just bring your energy. Community service certificates will be issued to all participants (great for student portfolios). Families welcome; kids\' corner with activities included.',
+    images:[U('photo-1593113598332-cd288d649433'), U('photo-1559027615-cd4628902d4a')],
+    venue:'Greater Iqbal Park', address:'Circular Road, Near Minar-e-Pakistan, Lahore, Punjab, Pakistan', lat:31.5925, lng:74.3095,
+    price:0, organizer:'Clean Lahore Initiative', contact:'0300-9900112 · volunteer@cleanlahore.pk', featured:false },
 ];
 
-/* ================= HELPERS ================= */
-const catOf = s => CATS.find(c=>c.slug===s) || {name:s, color:'#4f46e5'};
-const evOf = slug => EVENTS.find(e=>e.slug===slug);
-const priceText = e => e.free ? 'FREE ENTRY' : 'Rs ' + e.price;
-const directionsURL = e => `https://www.google.com/maps/dir/?api=1&destination=${e.venue.lat},${e.venue.lng}`;
+/* =====================================================================
+   HELPERS
+===================================================================== */
+const catOf = slug => CATS.find(c=>c.slug===slug) || {name:slug, color:'#4f46e5'};
+const evOf = id => EVENTS.find(e=>e.id===id);
+const priceText = e => e.price===0 ? 'FREE ENTRY' : 'Rs ' + e.price;
+const directionsURL = e => `https://www.google.com/maps/dir/?api=1&destination=${e.lat},${e.lng}`;
+const PAGE_SIZE = 6;
 
-let selectedCats = new Set();   // empty = all (FR-03 multi-select)
+/* =====================================================================
+   STATE
+===================================================================== */
+let selectedCats = new Set();  // empty = all categories (FR-03 multi-select)
 let searchQuery = '';
-let highlightedSlug = null;
-let map, markers = {}, miniMap = null;
+let currentPage = 1;
+let highlightedId = null;
+let map = null, markers = {}, miniMap = null;
 
-/* ================= FILTER LOGIC (FR-03 + FR-08) ================= */
+/* =====================================================================
+   FILTER LOGIC — one source of truth for map + list + count (FR-03, FR-08)
+===================================================================== */
 function filteredEvents(){
   const q = searchQuery.trim().toLowerCase();
   return EVENTS.filter(e=>{
-    if (selectedCats.size && !selectedCats.has(e.cat)) return false;
+    if (selectedCats.size && !selectedCats.has(e.category)) return false;
     if (!q) return true;
-    const hay = [e.title, catOf(e.cat).name, e.organizer.name, e.venue.name, e.venue.address].join(' ').toLowerCase();
-    return hay.includes(q);
+    return [e.name, catOf(e.category).name, e.organizer, e.venue, e.address]
+      .join(' ').toLowerCase().includes(q);
   });
 }
 
-/* ================= MAP (FR-01 + FR-06) ================= */
+/* =====================================================================
+   MAP (FR-01, FR-06)
+===================================================================== */
 function makeIcon(color, big){
-  const s = big ? 40 : 26;
+  const s = big ? 42 : 26;
   return L.divIcon({
-    html:`<div style="background:${color};width:${s}px;height:${s}px;border-radius:50%;border:${big?4:3}px solid #fff;box-shadow:0 2px ${big?12:6}px rgba(0,0,0,.5)${big?';outline:3px solid '+color:''}"></div>`,
+    html:`<div style="background:${color};width:${s}px;height:${s}px;border-radius:50%;border:${big?4:3}px solid #fff;box-shadow:0 2px ${big?12:6}px rgba(0,0,0,.5)"></div>`,
     iconSize:[s,s], iconAnchor:[s/2,s/2], className:''
   });
 }
 function initMap(){
-  map = L.map('map').setView([31.53, 71.578], 1); // temp, fitBounds below
-  map.setView([31.53, 74.31], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+  map = L.map('map').setView([31.53, 74.31], 12);
+  // OSM tiles with required attribution
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {maxZoom:19, attribution:'© OpenStreetMap contributors'}).addTo(map);
   refreshMarkers(true);
+  renderLegend();
 }
+// Rebuild markers from current filters; fit bounds on first load
 function refreshMarkers(fit=false){
   Object.values(markers).forEach(m=>map.removeLayer(m)); markers={};
   const list = filteredEvents();
   list.forEach(e=>{
-    const c = catOf(e.cat).color;
-    const m = L.marker([e.venue.lat,e.venue.lng],{icon:makeIcon(c, e.slug===highlightedSlug)})
+    const m = L.marker([e.lat,e.lng],{icon:makeIcon(catOf(e.category).color, e.id===highlightedId)})
       .addTo(map)
-      .bindPopup(`<b>${e.title}</b><br>🗓 ${e.date}<br>🏷 ${catOf(e.cat).name}`);
-    m.on('click',()=>{ highlightMarker(e.slug); });
-    markers[e.slug]=m;
+      .bindPopup(`<b>${e.name}</b><br>🗓 ${e.date}<br>🏷 ${catOf(e.category).name}`);
+    m.on('click',()=>highlightMarker(e.id)); // popup opens via highlightMarker
+    markers[e.id]=m;
   });
-  if (fit && list.length){
-    map.fitBounds(L.latLngBounds(list.map(e=>[e.venue.lat,e.venue.lng])).pad(0.25));
-  }
-  if (highlightedSlug && markers[highlightedSlug]){
-    const e = evOf(highlightedSlug);
-    markers[highlightedSlug].setIcon(makeIcon(catOf(e.cat).color,true));
+  if (fit && list.length) map.fitBounds(L.latLngBounds(list.map(e=>[e.lat,e.lng])).pad(0.2));
+}
+// Highlight one marker: bigger icon, pan to it, open popup (FR-06)
+function highlightMarker(id, pan=true){
+  highlightedId = id;
+  Object.entries(markers).forEach(([mid,m])=>{
+    const e = evOf(+mid);
+    m.setIcon(makeIcon(catOf(e.category).color, +mid===id));
+  });
+  if (id && markers[id]){
+    const e = evOf(id);
+    if (pan) map.flyTo([e.lat,e.lng], 15, {duration:0.8});
+    markers[id].openPopup();
   }
 }
-function highlightMarker(slug, pan=true){
-  highlightedSlug = slug;
-  Object.entries(markers).forEach(([s,m])=>{
-    const e = evOf(s);
-    m.setIcon(makeIcon(catOf(e.cat).color, s===slug));
-  });
-  if (slug && markers[slug] && pan){
-    const e = evOf(slug);
-    map.flyTo([e.venue.lat,e.venue.lng], 15, {duration:0.8});
-    markers[slug].openPopup();
-  }
+// Legend below the map: category name + color
+function renderLegend(){
+  document.getElementById('legend').innerHTML =
+    CATS.map(c=>`<span><span class="dot" style="background:${c.color}"></span>${c.name}</span>`).join('');
 }
 
-/* ================= HOME RENDER ================= */
+/* =====================================================================
+   FILTER CHIPS (FR-03)
+===================================================================== */
 function renderFilters(){
   const box = document.getElementById('filters');
-  let html = `<button data-cat="" class="${selectedCats.size===0?'active':''}">All</button>`;
-  html += CATS.map(c=>`<button data-cat="${c.slug}" class="${selectedCats.has(c.slug)?'active':''}">${c.name}</button>`).join('');
+  let html = `<button class="chip ${selectedCats.size===0?'active':''}" data-cat="">All</button>`;
+  html += CATS.map(c=>
+    `<button class="chip ${selectedCats.has(c.slug)?'active':''}" data-cat="${c.slug}"><span class="dot" style="background:${c.color}"></span>${c.name}</button>`
+  ).join('');
   box.innerHTML = html;
-  box.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  box.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
     const c = b.dataset.cat;
     if (!c) selectedCats.clear();
-    else { selectedCats.has(c) ? selectedCats.delete(c) : selectedCats.add(c); }
-    renderHome(false);
+    else selectedCats.has(c) ? selectedCats.delete(c) : selectedCats.add(c);
+    currentPage = 1;
+    renderAll(false);
   });
 }
+
+/* =====================================================================
+   FEATURED SECTION (FR-07)
+===================================================================== */
 function renderFeatured(){
   const box = document.getElementById('featured');
   const feats = filteredEvents().filter(e=>e.featured);
   box.innerHTML = feats.length ? feats.map(e=>`
-    <div class="fcard">
-      <img src="${e.images[0]}" alt="${e.title} — event photo" loading="lazy">
+    <div class="fcard" data-id="${e.id}">
+      <img src="${e.images[0]}" alt="${e.name} — event photo" loading="lazy">
       <div class="body">
-        <span class="catpill" style="background:${catOf(e.cat).color}">${catOf(e.cat).name}</span>
-        <h3>${e.title}</h3>
-        <div class="meta">🗓 ${e.date} &nbsp;•&nbsp; ${e.time}</div>
+        <span class="catpill" style="background:${catOf(e.category).color}">${catOf(e.category).name}</span>
+        <h3>${e.name}</h3>
+        <div class="meta">🗓 ${e.date} &nbsp;•&nbsp; ${e.startTime}</div>
         <div class="desc">${e.shortDesc}</div>
-        <a class="btn" href="#/events/${e.slug}">View Details →</a>
+        <a class="btn" href="#/event/${e.id}">View Details →</a>
       </div>
     </div>`).join('')
-    : '<div class="noresults">No featured events match your filters.</div>';
+    : `<div class="noresults"><h3>No featured events</h3><p>None match your current filters.</p></div>`;
+  // hovering a featured card highlights its map marker (FR-06)
+  box.querySelectorAll('.fcard').forEach(card=>{
+    const id = +card.dataset.id;
+    card.addEventListener('mouseenter',()=>highlightMarker(id,false));
+    card.addEventListener('mouseleave',()=>highlightMarker(null,false));
+  });
+}
+
+/* =====================================================================
+   EVENT LIST + PAGINATION (FR-02)
+===================================================================== */
+function cardHTML(e){
+  return `
+    <div class="card" data-id="${e.id}" style="border-left-color:${catOf(e.category).color}">
+      <img class="thumb" src="${e.images[0]}" alt="${e.name} — thumbnail" loading="lazy">
+      <div class="info">
+        <span class="catpill" style="background:${catOf(e.category).color}">${catOf(e.category).name}</span>
+        <h3>${e.name}</h3>
+        <div class="meta">🗓 ${e.date} &nbsp;•&nbsp; ${e.startTime} – ${e.endTime}</div>
+        <div class="desc">${e.shortDesc}</div>
+        <div class="meta">📍 ${e.address}</div>
+        <div class="meta">📞 ${e.organizer} — ${e.contact}</div>
+        <div class="price">${priceText(e)}</div>
+        <div style="margin-top:8px"><a class="btn" href="#/event/${e.id}">View Details →</a></div>
+      </div>
+    </div>`;
 }
 function renderList(){
   const box = document.getElementById('list');
   const list = filteredEvents();
-  box.innerHTML = list.length ? list.map(e=>`
-    <div class="card" data-slug="${e.slug}" style="border-left-color:${catOf(e.cat).color}">
-      <img class="thumb" src="${e.images[0]}" alt="${e.title} — thumbnail" loading="lazy">
-      <div class="info">
-        <h3>${e.title}</h3>
-        <div class="meta">📍 ${e.venue.name} &nbsp;•&nbsp; 🗓 ${e.date}</div>
-        <div class="meta">🏷 ${catOf(e.cat).name}</div>
-        <div class="desc">${e.shortDesc}</div>
-        <div class="price">${priceText(e)}</div>
-      </div>
-    </div>`).join('')
-    : '<div class="noresults"><h3>😕 No results found</h3><p>Try a different search or clear the filters.</p></div>';
+  const pages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if (currentPage > pages) currentPage = pages;
+  const slice = list.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
+  box.innerHTML = slice.length ? slice.map(cardHTML).join('')
+    : `<div class="noresults"><h3>😕 No results found</h3>
+       <p>Try a different search or clear the filters.</p>
+       <button class="btn" id="resetBtn">Reset filters</button></div>`;
+
+  const rb = document.getElementById('resetBtn');
+  if (rb) rb.onclick = resetAll;
+
+  // hover/click syncs list item with its map marker (FR-02, FR-06)
   box.querySelectorAll('.card').forEach(card=>{
-    const slug = card.dataset.slug;
-    card.addEventListener('mouseenter',()=>highlightMarker(slug,false)); // FR-02 hover sync
+    const id = +card.dataset.id;
+    card.addEventListener('mouseenter',()=>highlightMarker(id,false));
     card.addEventListener('mouseleave',()=>highlightMarker(null,false));
-    card.addEventListener('click',()=>{ highlightMarker(slug); setTimeout(()=>{ location.hash='#/events/'+slug; }, 900); });
+    card.addEventListener('click',ev=>{
+      if (ev.target.closest('a')) return; // let View Details link work normally
+      highlightMarker(id);
+    });
   });
+  renderPagination(pages, list.length);
 }
-function renderHome(refitMap=true){
-  document.getElementById('homeView').style.display='block';
-  document.getElementById('detailView').style.display='none';
-  if (miniMap){ miniMap.remove(); miniMap=null; }
-  renderFilters(); renderFeatured(); renderList();
-  refreshMarkers(refitMap);
-  setTimeout(()=>map.invalidateSize(), 100);
+function renderPagination(pages, total){
+  const box = document.getElementById('pagination');
+  if (!total){ box.innerHTML=''; return; }
+  box.innerHTML = `
+    <button id="prevPage" ${currentPage===1?'disabled':''}>← Prev</button>
+    <span class="pageinfo">Page ${currentPage} of ${pages}</span>
+    <button id="nextPage" ${currentPage===pages?'disabled':''}>Next →</button>`;
+  document.getElementById('prevPage').onclick = ()=>{ if(currentPage>1){currentPage--; renderList();} };
+  document.getElementById('nextPage').onclick = ()=>{ if(currentPage<pages){currentPage++; renderList();} };
+}
+function renderCount(){
+  const n = filteredEvents().length;
+  document.getElementById('resultCount').textContent =
+    n===0 ? 'No events found' : `${n} event${n===1?'':'s'} found`;
+}
+function resetAll(){
+  selectedCats.clear(); searchQuery=''; currentPage=1;
+  document.getElementById('searchInput').value='';
+  document.getElementById('clearSearch').style.display='none';
+  renderAll(false);
+}
+// Re-render everything that depends on filters (map stays fitted)
+function renderAll(){
+  renderFilters(); renderFeatured(); renderList(); renderCount();
+  refreshMarkers(false);
+  highlightedId = null;
 }
 
-/* ================= DETAIL PAGE (FR-04 + FR-05 + FR-09) ================= */
-function renderDetail(slug){
-  const e = evOf(slug);
-  const box = document.getElementById('detailView');
+/* =====================================================================
+   DETAIL VIEW (FR-04) — hash route #/event/{id}
+===================================================================== */
+let carouselIdx = 0, carouselImgs = [];
+function renderDetail(id){
+  const e = evOf(id);
   if (!e){ location.hash='#/'; return; }
   document.getElementById('homeView').style.display='none';
+  const box = document.getElementById('detailView');
   box.style.display='block';
+  carouselIdx = 0; carouselImgs = e.images;
+
   box.innerHTML = `
-    <div class="breadcrumb"><a href="#/">Home</a> &nbsp;/&nbsp; <a href="#/">Events</a> &nbsp;/&nbsp; ${e.title}</div>
-    <div class="gallery">
-      <img src="${e.images[0]}" alt="${e.title} — photo 1" loading="lazy">
-      <img src="${e.images[1]}" alt="${e.title} — photo 2" loading="lazy">
+    <div class="breadcrumb"><a href="#/">Home</a> &nbsp;/&nbsp; <a href="#/">Events</a> &nbsp;/&nbsp; ${e.name}</div>
+    <div class="carousel">
+      <img class="main" id="carImg" src="${e.images[0]}" alt="${e.name} — photo 1 of ${e.images.length}" loading="lazy">
+      <button class="nav prev" id="carPrev" aria-label="Previous photo">‹</button>
+      <button class="nav next" id="carNext" aria-label="Next photo">›</button>
+      <span class="counter" id="carCounter">1 / ${e.images.length}</span>
     </div>
     <div class="detail-box">
-      <span class="catpill" style="background:${catOf(e.cat).color}">${catOf(e.cat).name}</span>
+      <span class="catpill" style="background:${catOf(e.category).color}">${catOf(e.category).name}</span>
       ${e.featured?'<span class="catpill" style="background:#f59e0b;color:#1c1005">⭐ FEATURED</span>':''}
-      <h2>${e.title}</h2>
+      <h2>${e.name}</h2>
       <div class="row">${e.fullDesc}</div>
-      <div class="row">📍 <b>Venue:</b> ${e.venue.name}<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>Address:</b> ${e.venue.address}</div>
-      <div class="row">🗓 <b>Date:</b> ${e.date}<br>🕒 <b>Time:</b> ${e.time}</div>
+      <div class="row">📍 <b>Venue:</b> ${e.venue}<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>Address:</b> ${e.address}</div>
+      <div class="row">🗓 <b>Date:</b> ${e.date}<br>🕒 <b>Time:</b> ${e.startTime} – ${e.endTime}</div>
       <div class="row">🎟 <b>Ticket:</b> <span class="price">${priceText(e)}</span></div>
-      <div class="row">📞 <b>Organizer:</b> ${e.organizer.name} — ${e.organizer.phone}<br>✉️ ${e.organizer.email}</div>
+      <div class="row">📞 <b>Organizer:</b> ${e.organizer}<br>✉️ ${e.contact}</div>
+      <div class="row" id="rsvpRow"><button class="btn" id="rsvpBtn">✓ RSVP for this event</button></div>
       <div class="row">
-        <a class="btn" href="${directionsURL(e)}" target="_blank" rel="noopener">📍 Get Directions</a>
-        &nbsp;<a class="btn" href="#/" style="background:#334155">← Back to Events</a>
+        <a class="btn secondary" href="${directionsURL(e)}" target="_blank" rel="noopener">📍 Get Directions</a>
+        &nbsp;<a class="btn secondary" href="#/">← Back to Events</a>
       </div>
       <div id="minimap"></div>
     </div>`;
-  miniMap = L.map('minimap',{scrollWheelZoom:false}).setView([e.venue.lat,e.venue.lng],16);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(miniMap);
-  L.marker([e.venue.lat,e.venue.lng],{icon:makeIcon(catOf(e.cat).color,true)}).addTo(miniMap)
-    .bindPopup(`<b>${e.title}</b><br>${e.venue.name}`).openPopup();
+
+  // carousel controls
+  const updateCar = ()=>{
+    const img = document.getElementById('carImg');
+    img.src = carouselImgs[carouselIdx];
+    img.alt = `${e.name} — photo ${carouselIdx+1} of ${carouselImgs.length}`;
+    document.getElementById('carCounter').textContent = `${carouselIdx+1} / ${carouselImgs.length}`;
+  };
+  document.getElementById('carPrev').onclick = ()=>{ carouselIdx=(carouselIdx-1+carouselImgs.length)%carouselImgs.length; updateCar(); };
+  document.getElementById('carNext').onclick = ()=>{ carouselIdx=(carouselIdx+1)%carouselImgs.length; updateCar(); };
+
+  // RSVP demo: confirmation message (no backend in prototype)
+  document.getElementById('rsvpBtn').onclick = ()=>{
+    document.getElementById('rsvpRow').innerHTML =
+      `<div class="rsvp-ok">✅ You're on the list! This is a demo RSVP — the final system will send a real confirmation.</div>`;
+  };
+
+  // embedded mini-map of the exact location (FR-04)
+  miniMap = L.map('minimap',{scrollWheelZoom:false}).setView([e.lat,e.lng],16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {maxZoom:19, attribution:'© OpenStreetMap contributors'}).addTo(miniMap);
+  L.marker([e.lat,e.lng],{icon:makeIcon(catOf(e.category).color,true)}).addTo(miniMap)
+    .bindPopup(`<b>${e.name}</b><br>${e.venue}`).openPopup();
   window.scrollTo(0,0);
 }
 
-/* ================= ROUTER ================= */
+/* =====================================================================
+   ROUTER — #/ = home, #/event/{id} = detail
+===================================================================== */
 function route(){
-  const h = location.hash;
-  const m = h.match(/^#\/events\/([\w-]+)/);
-  if (m) renderDetail(m[1]);
-  else renderHome(false);
+  const m = location.hash.match(/^#\/event\/(\d+)/);
+  if (m) renderDetail(+m[1]);
+  else {
+    document.getElementById('homeView').style.display='block';
+    document.getElementById('detailView').style.display='none';
+    if (miniMap){ miniMap.remove(); miniMap=null; }
+    setTimeout(()=>map && map.invalidateSize(), 100);
+  }
 }
 window.addEventListener('hashchange', route);
 
-/* ================= SEARCH (FR-08) ================= */
+/* =====================================================================
+   SEARCH (FR-08)
+===================================================================== */
 const searchInput = document.getElementById('searchInput');
 const clearBtn = document.getElementById('clearSearch');
 searchInput.addEventListener('input',()=>{
   searchQuery = searchInput.value;
   clearBtn.style.display = searchQuery ? 'block' : 'none';
-  renderFeatured(); renderList(); refreshMarkers(false);
+  currentPage = 1;
+  renderFeatured(); renderList(); renderCount(); refreshMarkers(false);
 });
 clearBtn.addEventListener('click',()=>{
   searchInput.value=''; searchQuery=''; clearBtn.style.display='none';
-  renderFeatured(); renderList(); refreshMarkers(false);
+  currentPage = 1;
+  renderFeatured(); renderList(); renderCount(); refreshMarkers(false);
 });
 
-/* ================= MOBILE TABS (FR-10) ================= */
+/* =====================================================================
+   MOBILE TABS — Map / List toggle (FR-10)
+===================================================================== */
 const tabMap = document.getElementById('tabMap'), tabList = document.getElementById('tabList');
-const mapEl = document.getElementById('map'), listEl = document.getElementById('list');
 function mobileTab(which){
   const isMap = which==='map';
   tabMap.classList.toggle('active', isMap);
   tabList.classList.toggle('active', !isMap);
-  mapEl.classList.toggle('show-mobile', isMap);
-  listEl.classList.toggle('show-mobile', !isMap);
+  document.getElementById('mapCol').classList.toggle('show-mobile', isMap);
+  document.getElementById('listCol').classList.toggle('show-mobile', !isMap);
   if (isMap) setTimeout(()=>map.invalidateSize(), 100);
 }
 tabMap.onclick=()=>mobileTab('map');
 tabList.onclick=()=>mobileTab('list');
 
-/* ================= INIT ================= */
-initMap();
-route();
+/* =====================================================================
+   INIT — loading state first, then render (never a blank section)
+===================================================================== */
+setTimeout(()=>{
+  document.getElementById('loading').style.display='none';
+  document.getElementById('content').style.display='block';
+  initMap();
+  renderAll();
+  route();
+}, 600);
 </script>
 </body>
 </html>
