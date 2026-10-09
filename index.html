@@ -206,7 +206,7 @@ function refreshMarkers(fit=false){
     const m = L.marker([e.venue.lat,e.venue.lng],{icon:makeIcon(c, e.slug===highlightedSlug)})
       .addTo(map)
       .bindPopup(`<b>${e.title}</b><br>🗓 ${e.date}<br>🏷 ${catOf(e.cat).name}`);
-    m.on('click',()=>{ location.hash = '#/events/'+e.slug; });
+    m.on('click',()=>{ highlightMarker(e.slug); });
     markers[e.slug]=m;
   });
   if (fit && list.length){
